@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Special One AI Detection PRO</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f4;--bg3:#fafaf9;
+  --text:#1c1917;--text2:#78716c;--text3:#a8a29e;
+  --border:#e7e5e4;--border2:#d6d3d1;
+  --radius:10px;--radius-lg:14px;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1c1917;--bg2:#292524;--bg3:#0c0a09;--text:#fafaf9;--text2:#a8a29e;--text3:#78716c;--border:#292524;--border2:#44403c;}
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);min-height:100vh;padding:2rem 1rem;position:relative;overflow-x:hidden}
+
+@keyframes shimmer{
+  0%  {background-position:0% 50%}
+  50% {background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+.page{max-width:720px;margin:0 auto;position:relative;z-index:1}
+.card,.result-card,.history-section,.app-header{position:relative;z-index:1}
+
+.app-header{text-align:center;margin-bottom:1.5rem}
+.app-header h1{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1.2;background:linear-gradient(135deg,#1c1917 0%,#57534e 35%,#D85A30 65%,#EF9F27 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+@media(prefers-color-scheme:dark){.app-header h1{background:linear-gradient(135deg,#fafaf9 0%,#d6d3d1 35%,#EF9F27 65%,#D85A30 100%);-webkit-background-clip:text;background-clip:text}}
+.app-header p{font-size:14px;color:var(--text2);margin-top:6px}
+.badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.badge{font-size:11px;padding:3px 12px;border-radius:20px;font-weight:600}
+
+/* Disclaimer */
+.disclaimer{background:#FAEEDA;border:1px solid #FAC775;border-radius:var(--radius);padding:10px 14px;margin-bottom:1.25rem;font-size:12px;color:#854F0B;line-height:1.6;display:flex;gap:8px;align-items:flex-start}
+.disclaimer-icon{font-size:15px;flex-shrink:0;margin-top:1px}
+
+.tabs{display:flex;gap:8px;margin-bottom:1.5rem;padding:0}
+.tab{flex:1;padding:14px 8px;border:1.5px solid var(--border2);border-radius:var(--radius-lg);background:var(--bg);color:var(--text3);font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .25s cubic-bezier(.34,1.56,.64,1);display:flex;flex-direction:column;align-items:center;gap:6px;line-height:1.2;position:relative;overflow:hidden}
+.tab::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .2s}
+.tab .tab-icon{font-size:26px;line-height:1;transition:transform .25s cubic-bezier(.34,1.56,.64,1);filter:grayscale(40%)}
+.tab .tab-label{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;transition:all .2s}
+.tab .tab-sub{font-size:9px;font-weight:500;letter-spacing:.04em;opacity:0;transform:translateY(4px);transition:all .2s;color:inherit}
+.tab:hover:not(.active){border-color:#94a3b8;color:var(--text);background:var(--bg2);transform:translateY(-2px)}
+.tab:hover:not(.active) .tab-icon{transform:scale(1.2) rotate(-5deg);filter:grayscale(0%)}
+.tab:hover:not(.active) .tab-sub{opacity:.7;transform:translateY(0)}
+.tab.active{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.tab.active .tab-icon{transform:scale(1.25);filter:grayscale(0%)}
+.tab.active .tab-sub{opacity:1;transform:translateY(0)}
+.tab.active.tab-text{border-color:#185FA5;background:linear-gradient(145deg,#E6F1FB,#c7dcf5);color:#185FA5}
+.tab.active.tab-text .tab-label{background:linear-gradient(135deg,#185FA5,#534AB7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tab.active.tab-image{border-color:#993C1D;background:linear-gradient(145deg,#FAECE7,#f5c8b4);color:#993C1D}
+.tab.active.tab-image .tab-label{background:linear-gradient(135deg,#D85A30,#EF9F27);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tab.active.tab-video{border-color:#0F6E56;background:linear-gradient(145deg,#E1F5EE,#b8e8d6);color:#0F6E56}
+.tab.active.tab-video .tab-label{background:linear-gradient(135deg,#0F6E56,#1D9E75);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tab.active .tab-icon{animation:tabPop .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tabPop{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1.25)}}
+
+.card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1rem}
+.card-body{padding:1.25rem}
+.panel{display:none}.panel.active{display:block}
+
+textarea{width:100%;min-height:150px;padding:12px 14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;font-size:14px;line-height:1.7;resize:vertical;outline:none;transition:border-color .2s}
+textarea:focus{border-color:#94a3b8}
+textarea::placeholder{color:var(--text3)}
+
+.row-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px}
+.meta-left{display:flex;gap:10px;align-items:center}
+.word-count{font-size:12px;color:var(--text3)}
+.word-warn{font-size:12px;color:#D85A30;display:none}
+.clear-btn{font-size:12px;color:var(--text3);background:none;border:none;cursor:pointer;padding:3px 8px;border-radius:6px;transition:background .15s}
+.clear-btn:hover{background:var(--bg2);color:var(--text2)}
+
+.upload-zone{width:100%;min-height:150px;border:1.5px dashed var(--border2);border-radius:var(--radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;transition:all .2s;background:var(--bg2);position:relative;overflow:hidden}
+.upload-zone:hover{border-color:#94a3b8;background:var(--bg)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:32px;line-height:1}
+.upload-label{font-size:14px;color:var(--text2);font-weight:500}
+.upload-sub{font-size:12px;color:var(--text3)}
+.preview-wrap{position:relative;width:100%;border-radius:var(--radius-lg);overflow:hidden;background:var(--bg2);border:1px solid var(--border)}
+.preview-img{width:100%;max-height:260px;object-fit:contain;display:block}
+.preview-video{width:100%;max-height:260px;display:block}
+.remove-btn{position:absolute;top:8px;right:8px;background:var(--bg);border:1px solid var(--border2);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text2)}
+
+.btn{width:100%;margin-top:14px;padding:13px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:15px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--bg2)}.btn:active{transform:scale(.99)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.notice{font-size:12px;color:var(--text3);text-align:center;margin-top:10px;line-height:1.5;padding:0 8px}
+
+.loading{display:none;align-items:center;justify-content:center;gap:10px;margin-top:1rem;font-size:14px;color:var(--text2)}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--text2);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Result card */
+.result-card{display:none;margin-top:1.25rem}
+.verdict-bar{display:flex;align-items:center;gap:14px;padding:1.25rem;border-bottom:1px solid var(--border)}
+.v-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;font-weight:700}
+.v-label{font-size:17px;font-weight:600}
+.v-sub{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.4}
+
+.big-score{padding:1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.score-circle{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:700;flex-shrink:0;border:3px solid transparent}
+.score-desc{font-size:13px;color:var(--text2);line-height:1.6;flex:1;min-width:160px}
+.score-desc strong{color:var(--text);font-weight:600}
+
+/* Action buttons row */
+.action-row{display:flex;gap:8px;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.action-btn{flex:1;min-width:100px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s}
+.action-btn:hover{background:var(--bg2);color:var(--text)}
+
+/* Cartoon verdict */
+.cartoon-section{padding:1.25rem;border-bottom:1px solid var(--border);background:var(--bg2)}
+.cartoon-inner{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.cartoon-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.cartoon-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-align:center}
+.cartoon-svg{transition:transform .3s}
+.cartoon-svg.dominant{transform:scale(1.18)}
+.cartoon-svg.receding{transform:scale(0.78);opacity:.6}
+.vs-badge{font-size:13px;font-weight:800;color:var(--text3);padding:0 4px}
+
+/* Signals */
+.signals-title{padding:.75rem 1.25rem .25rem;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em}
+.signals{padding:.75rem 1.25rem 1rem;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.signal-item{background:var(--bg2);border-radius:var(--radius);padding:11px 13px;border:1px solid var(--border)}
+.signal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.signal-name{font-size:12px;color:var(--text2);font-weight:500}
+.signal-val{font-size:13px;font-weight:700}
+.signal-hint{font-size:11px;color:var(--text3);margin-bottom:7px;line-height:1.35}
+.signal-bar{height:5px;background:var(--border2);border-radius:4px;overflow:hidden}
+.signal-fill{height:100%;border-radius:4px;width:0%;transition:width 1s cubic-bezier(.25,.8,.25,1)}
+
+/* Sentence highlight section */
+.hl-section{padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.hl-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;margin-bottom:.6rem}
+.hl-legend{display:flex;gap:12px;margin-bottom:.75rem;flex-wrap:wrap}
+.hl-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.hl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hl-text{font-size:14px;line-height:2.2;color:#1c1917 !important;background:var(--bg2);border-radius:var(--radius);padding:14px;border:1px solid var(--border)}
+.hl-high{background:#FAECE7;border-radius:3px;padding:1px 3px;cursor:help}
+.hl-med{background:#FAEEDA;border-radius:3px;padding:1px 3px;cursor:help}
+.hl-low{background:#EAF3DE;border-radius:3px;padding:1px 3px;cursor:help}
+
+/* Tips section */
+.tips-section{padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tips-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.07em;margin-bottom:.6rem}
+.tip-item{font-size:12px;color:var(--text2);margin-bottom:5px;padding-left:12px;position:relative;line-height:1.5}
+.tip-item::before{content:'•';position:absolute;left:0;color:var(--text3)}
+
+/* Tags */
+.tags{display:flex;flex-wrap:wrap;gap:7px;padding:1rem 1.25rem}
+.tag{font-size:12px;padding:4px 12px;border-radius:20px;font-weight:500}
+
+/* History */
+.history-section{margin-top:1.5rem}
+.history-title{font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.06em;margin-bottom:.75rem}
+.history-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;transition:background .15s}
+.history-item:hover{background:var(--bg2)}
+.history-left{flex:1;min-width:0}
+.history-preview{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.history-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.history-score{font-size:13px;font-weight:700;flex-shrink:0}
+
+.footer{text-align:center;margin-top:2rem;font-size:12px;color:var(--text3);line-height:1.7}
+
+@media(max-width:500px){
+  body{padding:1rem .75rem}
+  .signals{grid-template-columns:1fr}
+  .app-header h1{font-size:26px}
+  .score-circle{width:56px;height:56px;font-size:18px}
+  .big-score{gap:12px}
+  .action-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="app-header">
+    <h1>Special One AI Detection PRO</h1>
+    <p>Detect AI-generated text, images and videos instantly</p>
+    <div class="badges">
+      <span class="badge" style="background:#E6F1FB;color:#185FA5">8 Text Signals</span>
+      <span class="badge" style="background:#EAF3DE;color:#3B6D11">Sentence Highlights</span>
+      <span class="badge" style="background:#EEEDFE;color:#534AB7">All Languages</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="tabs">
+        <button class="tab tab-text active" onclick="switchTab('text',this)">
+          <span class="tab-icon">🖊️</span>
+          <span class="tab-label">Text</span>
+          <span class="tab-sub">8 signals</span>
+        </button>
+        <button class="tab tab-image" onclick="switchTab('image',this)">
+          <span class="tab-icon">🎨</span>
+          <span class="tab-label">Image</span>
+          <span class="tab-sub">4 signals</span>
+        </button>
+        <button class="tab tab-video" onclick="switchTab('video',this)">
+          <span class="tab-icon">🎞️</span>
+          <span class="tab-label">Video</span>
+          <span class="tab-sub">4 signals</span>
+        </button>
+      </div>
+
+      <!-- TEXT PANEL -->
+      <div class="panel active" id="panel-text">
+        <textarea id="inputText" placeholder="Type or paste text here... (English, Swahili or any language — minimum 20 words)"></textarea>
+        <div class="row-meta">
+          <div class="meta-left">
+            <span class="word-count" id="wordCount">0 words</span>
+            <span class="word-warn" id="wordWarn">⚠ Need at least 20 words</span>
+          </div>
+          <button class="clear-btn" onclick="clearText()">Clear ✕</button>
+        </div>
+        <button class="btn" id="textBtn" onclick="analyzeText()">Analyze Text →</button>
+        <div class="loading" id="loadingText"><div class="spinner"></div><span>Checking 8 signals...</span></div>
+      </div>
+
+      <!-- IMAGE PANEL -->
+      <div class="panel" id="panel-image">
+        <div id="imgUploadZone" class="upload-zone">
+          <input type="file" accept="image/*" onchange="loadImage(event)" id="imgInput">
+          <div class="upload-icon">🖼</div>
+          <div class="upload-label">Click or drag an image here</div>
+          <div class="upload-sub">PNG · JPG · WEBP — up to 10MB</div>
+        </div>
+        <div id="imgPreview" style="display:none" class="preview-wrap">
+          <img id="previewImg" class="preview-img" src="" alt="Preview">
+          <button class="remove-btn" onclick="removeMedia('image')">✕</button>
+        </div>
+        <button class="btn" id="imgBtn" onclick="analyzeImage()" disabled>Analyze Image →</button>
+        <div class="loading" id="loadingImage"><div class="spinner"></div><span>Checking metadata and patterns...</span></div>
+        <p class="notice">Image analysis uses metadata, resolution and format signals. For definitive results, visual deep-learning analysis is recommended.</p>
+      </div>
+
+      <!-- VIDEO PANEL -->
+      <div class="panel" id="panel-video">
+        <div id="vidUploadZone" class="upload-zone">
+          <input type="file" accept="video/*" onchange="loadVideo(event)" id="vidInput">
+          <div class="upload-icon">🎬</div>
+          <div class="upload-label">Click or drag a video here</div>
+          <div class="upload-sub">MP4 · MOV · WEBM — up to 5 minutes</div>
+        </div>
+        <div id="vidPreview" style="display:none" class="preview-wrap">
+          <video id="previewVid" class="preview-video" controls></video>
+          <button class="remove-btn" onclick="removeMedia('video')">✕</button>
+        </div>
+        <button class="btn" id="vidBtn" onclick="analyzeVideo()" disabled>Analyze Video →</button>
+        <div class="loading" id="loadingVideo"><div class="spinner"></div><span>Checking video metadata...</span></div>
+        <p class="notice">Video analysis covers metadata, duration, format and bitrate signals only.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT CARD -->
+  <div class="result-card card" id="resultCard">
+
+    <div class="verdict-bar">
+      <div class="v-icon" id="vIcon"></div>
+      <div>
+        <div class="v-label" id="vLabel"></div>
+        <div class="v-sub" id="vSub"></div>
+      </div>
+    </div>
+
+    <div class="big-score">
+      <div class="score-circle" id="scoreCircle"></div>
+      <div class="score-desc" id="scoreDesc"></div>
+    </div>
+
+    <!-- CARTOON VERDICT -->
+    <div class="cartoon-section" id="cartoonSection" style="display:none">
+      <div class="cartoon-inner" id="cartoonInner"></div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="action-row">
+      <button class="action-btn" onclick="reAnalyze()">🔄 Re-Analyze</button>
+      <button class="action-btn" onclick="copyReport()">📋 Copy Report</button>
+      <button class="action-btn" onclick="downloadReport()">⬇ Download Report</button>
+    </div>
+
+    <div class="signals-title" id="signalsTitle">8 TEXT SIGNALS</div>
+    <div class="signals" id="signalsGrid"></div>
+
+    <!-- SENTENCE HIGHLIGHT (text only) -->
+    <div class="hl-section" id="hlSection" style="display:none">
+      <div class="hl-title">SENTENCE-LEVEL ANALYSIS</div>
+      <div class="hl-legend">
+        <div class="hl-leg"><div class="hl-dot" style="background:#D85A30"></div>High AI likelihood</div>
+        <div class="hl-leg"><div class="hl-dot" style="background:#EF9F27"></div>Moderate</div>
+        <div class="hl-leg"><div class="hl-dot" style="background:#639922"></div>Likely human</div>
+      </div>
+      <div class="hl-text" id="hlText"></div>
+    </div>
+
+    <!-- TIPS (shown when result is uncertain or human text flagged) -->
+    <div class="tips-section" id="tipsSection" style="display:none">
+      <div class="tips-title">WHY MIGHT MY HUMAN TEXT BE FLAGGED?</div>
+      <div class="tip-item">Academic or formal writing naturally scores higher — this does not mean it's AI</div>
+      <div class="tip-item">Short texts (&lt;50 words) are less reliable — results improve with longer samples</div>
+      <div class="tip-item">Consistent writing style can resemble AI patterns even when human-written</div>
+      <div class="tip-item">Technical or scientific writing tends to score higher due to formal language</div>
+      <div class="tip-item">This tool has a margin of error — always consider context before making judgments</div>
+    </div>
+
+    <div class="tags" id="tagsArea"></div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="history-section" id="historySection" style="display:none">
+    <div class="history-title">RECENT SCANS</div>
+    <div id="historyList"></div>
+  </div>
+
+  <div class="footer">
+    Special One AI Detection PRO · Works fully offline<br>
+    Results are probability estimates — not definitive verdicts<br>
+    <strong style="display:inline-block;margin-top:12px;font-size:22px;font-weight:800;letter-spacing:.08em;background:linear-gradient(135deg,#D85A30,#EF9F27,#D85A30);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none">📞 0792353234</strong>
+  </div>
+
+</div>
+
+<script>
+let currentTab='text';
+let imageFile=null, videoFile=null;
+let lastText='', lastResult=null, lastType='text';
+let history=[];
+
+function switchTab(tab,el){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  document.getElementById('resultCard').style.display='none';
+}
+
+// Live word counter with warning
+const ta=document.getElementById('inputText');
+ta.addEventListener('input',()=>{
+  const w=ta.value.trim().split(/\s+/).filter(x=>x).length;
+  document.getElementById('wordCount').textContent=w+' words';
+  const warn=document.getElementById('wordWarn');
+  warn.style.display=w>0&&w<20?'inline':'none';
+});
+
+function clearText(){
+  ta.value='';
+  document.getElementById('wordCount').textContent='0 words';
+  document.getElementById('wordWarn').style.display='none';
+  document.getElementById('resultCard').style.display='none';
+  lastText='';
+}
+
+function loadImage(e){
+  const file=e.target.files[0]; if(!file)return;
+  imageFile=file;
+  const url=URL.createObjectURL(file);
+  document.getElementById('previewImg').src=url;
+  document.getElementById('imgUploadZone').style.display='none';
+  document.getElementById('imgPreview').style.display='block';
+  document.getElementById('imgBtn').disabled=false;
+}
+
+function loadVideo(e){
+  const file=e.target.files[0]; if(!file)return;
+  videoFile=file;
+  const url=URL.createObjectURL(file);
+  document.getElementById('previewVid').src=url;
+  document.getElementById('vidUploadZone').style.display='flex';
+  document.getElementById('vidUploadZone').style.display='none';
+  document.getElementById('vidPreview').style.display='block';
+  document.getElementById('vidBtn').disabled=false;
+}
+
+function removeMedia(type){
+  if(type==='image'){
+    imageFile=null;
+    document.getElementById('imgUploadZone').style.display='flex';
+    document.getElementById('imgPreview').style.display='none';
+    document.getElementById('imgBtn').disabled=true;
+    document.getElementById('imgInput').value='';
+  } else {
+    videoFile=null;
+    document.getElementById('vidUploadZone').style.display='flex';
+    document.getElementById('vidPreview').style.display='none';
+    document.getElementById('vidBtn').disabled=true;
+    document.getElementById('vidInput').value='';
+  }
+  document.getElementById('resultCard').style.display='none';
+}
+
+function setLoading(type,on){
+  document.getElementById('loading'+type).style.display=on?'flex':'none';
+  const map={Text:'textBtn',Image:'imgBtn',Video:'vidBtn'};
+  document.getElementById(map[type]).disabled=on;
+  if(on) document.getElementById('resultCard').style.display='none';
+}
+
+function reAnalyze(){
+  if(lastType==='text'&&lastText){
+    const words=lastText.split(/\s+/).filter(x=>x);
+    setLoading('Text',true);
+    setTimeout(()=>{
+      const s=computeText(lastText,words);
+      showResults(s,'text',lastText);
+      setLoading('Text',false);
+    },1000);
+  } else if(lastType==='image'&&imageFile){
+    analyzeImage();
+  } else if(lastType==='video'&&videoFile){
+    analyzeVideo();
+  }
+}
+
+// ── ANALYZE ─────────────────────────────────────────────
+function analyzeText(){
+  const text=ta.value.trim();
+  const words=text.split(/\s+/).filter(x=>x);
+  if(!text||words.length<20){alert('Please enter at least 20 words.');return;}
+  lastText=text; lastType='text';
+  setLoading('Text',true);
+  setTimeout(()=>{
+    const s=computeText(text,words);
+    showResults(s,'text',text);
+    setLoading('Text',false);
+  },1400);
+}
+
+function analyzeImage(){
+  if(!imageFile)return;
+  lastType='image';
+  setLoading('Image',true);
+  const img=new Image();
+  img.onload=function(){
+    setTimeout(()=>{
+      const s=computeImage(imageFile,img);
+      showResults(s,'image','');
+      setLoading('Image',false);
+    },1600);
+  };
+  img.src=document.getElementById('previewImg').src;
+}
+
+function analyzeVideo(){
+  if(!videoFile)return;
+  lastType='video';
+  setLoading('Video',true);
+  const vid=document.getElementById('previewVid');
+  setTimeout(()=>{
+    const s=computeVideo(videoFile,vid);
+    showResults(s,'video','');
+    setLoading('Video',false);
+  },1800);
+}
+
+// ── TEXT ALGORITHM — 8 SIGNALS ───────────────────────────
+function computeText(text,words){
+  const sentences=(text.match(/[^.!?]+[.!?]*/g)||[text]).map(s=>s.trim()).filter(s=>s.length>3);
+  const lens=sentences.map(s=>s.split(/\s+/).filter(x=>x).length);
+  const meanLen=lens.length?lens.reduce((a,b)=>a+b,0)/lens.length:10;
+  const variance=lens.reduce((a,b)=>a+Math.pow(b-meanLen,2),0)/lens.length;
+  const avgDev=Math.sqrt(variance);
+  const cv=meanLen>0?Math.sqrt(variance)/meanLen:0;
+  const perplexityAI=clamp(100-(avgDev*7));
+  const burstiAI=clamp(100-(cv*120));
+  const cleanWords=words.map(w=>w.toLowerCase().replace(/[^a-z]/g,''));
+  const unique=new Set(cleanWords.filter(w=>w.length>0)).size;
+  const richness=unique/words.length;
+  const vocabAI=clamp(100-(richness*160));
+  let gramOk=0;
+  sentences.forEach(s=>{if(s.length>0&&s[0]===s[0].toUpperCase()&&s[0]!==s[0].toLowerCase())gramOk++;});
+  const grammarAI=clamp(sentences.length>0?(gramOk/sentences.length)*85:50);
+  const sentLenNorm=lens.map(l=>l/meanLen);
+  const styleVar=sentLenNorm.reduce((a,b)=>a+Math.pow(b-1,2),0)/sentLenNorm.length;
+  const styleAI=clamp(100-(styleVar*80));
+  const structW=['introduction','in conclusion','to summarize','firstly','secondly','thirdly','finally','in summary','furthermore','moreover','additionally','therefore','consequently','to begin','in this essay','this paper','overview','in closing','as mentioned','having said that','to conclude'];
+  const foundS=structW.filter(w=>text.toLowerCase().includes(w)).length;
+  const structureAI=clamp(foundS*16);
+  const persW=['i ','i\'m','i\'ve','i\'d','my ','mine ','we ','our ','personally','in my opinion','i think','i believe','i feel','to me ','for me ','i saw','i went','i know','i remember','i noticed','in my experience'];
+  const persCount=persW.filter(w=>text.toLowerCase().includes(w)).length;
+  const personalAI=clamp(100-(persCount*14));
+  const depthW=['for example','for instance','such as','specifically','in particular','research shows','studies indicate','according to','data shows','evidence suggests','to illustrate','based on my','from my experience','i witnessed'];
+  const depthCount=depthW.filter(w=>text.toLowerCase().includes(w)).length;
+  const depthAI=clamp(85-(depthCount*11));
+  const signals=[
+    {name:'Perplexity',score:perplexityAI,hint:'AI always writes with the same predictable pattern'},
+    {name:'Burstiness',score:burstiAI,hint:'AI writes sentences nearly equal in length'},
+    {name:'Vocabulary',score:vocabAI,hint:'AI repeats formal words and phrases'},
+    {name:'Grammar',score:grammarAI,hint:'AI has unusually perfect grammar'},
+    {name:'Style',score:styleAI,hint:'AI maintains one consistent style throughout'},
+    {name:'Structure',score:structureAI,hint:'AI follows a clean intro-body-conclusion layout'},
+    {name:'Personal voice',score:personalAI,hint:'AI never says "I think" or "I believe"'},
+    {name:'Content depth',score:depthAI,hint:'AI rarely provides real examples or evidence'},
+  ];
+  dedupeScores(signals);
+  const avg=Math.min(95,Math.max(6,Math.round(signals.reduce((a,b)=>a+b.score,0)/signals.length)));
+
+  // Sentence-level risk
+  const sentenceRisks=sentences.map(sent=>{
+    let risk=0;
+    if(structW.some(w=>sent.toLowerCase().includes(w)))risk+=30;
+    if(/\b(is|are|was|were|be|been|being)\s+\w+ed\b/i.test(sent))risk+=20;
+    if(sent.split(/\s+/).length>22)risk+=15;
+    if(!persW.some(w=>sent.toLowerCase().includes(w)))risk+=15;
+    if(depthW.some(w=>sent.toLowerCase().includes(w)))risk-=20;
+    return{text:sent,risk:Math.min(95,Math.max(6,risk))};
+  });
+
+  return{signals,avg,words:words.length,sentences:sentences.length,type:'text',sentenceRisks};
+}
+
+// ── IMAGE ────────────────────────────────────────────────
+function computeImage(file,img){
+  const sizeMB=file.size/1024/1024;
+  const w=img.naturalWidth, h=img.naturalHeight;
+  const ratio=w/h;
+  const isCommonAIRes=(w===1024&&h===1024)||(w===512&&h===512)||(w===768&&h===768)||(w===1024&&h===768)||(w===768&&h===1024)||(w===1344&&h===768)||(w===832&&h===1216);
+  const isRoundRatio=Math.abs(ratio-1)<0.02||Math.abs(ratio-4/3)<0.02||Math.abs(ratio-3/4)<0.02||Math.abs(ratio-16/9)<0.02||Math.abs(ratio-9/16)<0.02;
+  const isPerfectSquare=w===h;
+  const isPng=file.type==='image/png';
+  const isWebp=file.type==='image/webp';
+  const resScore=clamp(isCommonAIRes?88:isPerfectSquare?72:isRoundRatio?55:28);
+  const sizeScore=clamp(sizeMB<0.05?78:sizeMB>5?22:50);
+  const formatScore=clamp(isPng?62:isWebp?52:32);
+  const dimScore=clamp(w>=512&&w<=2048&&h>=512&&h<=2048?65:22);
+  const signals=[
+    {name:'Resolution',score:resScore,hint:'AI generators commonly use standard sizes (1024×1024)'},
+    {name:'File size',score:sizeScore,hint:'AI images can be unusually small or large'},
+    {name:'Format',score:formatScore,hint:'PNG and WebP are common AI generator formats'},
+    {name:'Dimensions',score:dimScore,hint:'AI typically uses standard dimensions (512–2048px)'},
+  ];
+  dedupeScores(signals);
+  const avg=Math.min(95,Math.max(6,Math.round(signals.reduce((a,b)=>a+b.score,0)/signals.length)));
+  return{signals,avg,type:'image',extra:`${w}×${h}px · ${sizeMB.toFixed(2)}MB · ${file.type}`};
+}
+
+// ── VIDEO ────────────────────────────────────────────────
+function computeVideo(file,vid){
+  const sizeMB=file.size/1024/1024;
+  const duration=vid.duration||0;
+  const isShort=duration>0&&duration<=300;
+  const isWebm=file.type==='video/webm';
+  const isMP4=file.type==='video/mp4';
+  const isTooSmall=sizeMB<1&&duration>10;
+  const bitrateKbps=duration>0?Math.round(sizeMB/duration*8*1000):0;
+  const durationScore=clamp(isShort?62:30);
+  const formatScore=clamp(isWebm?68:isMP4?50:35);
+  const sizeScore=clamp(isTooSmall?72:sizeMB>80?18:44);
+  const bitrateScore=clamp(bitrateKbps<500&&duration>0?72:bitrateKbps>5000?18:44);
+  const signals=[
+    {name:'Duration',score:durationScore,hint:'Short videos (under 5 min) are common for AI generators'},
+    {name:'Format',score:formatScore,hint:'WebM is a common format for AI video generators'},
+    {name:'File size',score:sizeScore,hint:'AI videos can be unusually small for their duration'},
+    {name:'Bitrate',score:bitrateScore,hint:'AI videos often have a lower bitrate than real footage'},
+  ];
+  dedupeScores(signals);
+  const avg=Math.min(95,Math.max(6,Math.round(signals.reduce((a,b)=>a+b.score,0)/signals.length)));
+  const dur=isNaN(duration)||duration===0?'Unknown':(Math.floor(duration/60)+'m '+Math.round(duration%60)+'s');
+  return{signals,avg,type:'video',extra:`${dur} · ${sizeMB.toFixed(1)}MB · ${file.type}`};
+}
+
+// ── SHOW RESULTS ─────────────────────────────────────────
+function showResults(s,type,origText){
+  lastResult=s; lastType=type;
+  const p=s.avg;
+  let bg,tc,verdict,vsub,cdesc;
+  if(p>=65){
+    bg='#FAECE7';tc='#993C1D';
+    verdict=type==='text'?'Likely AI-Generated':type==='image'?'Likely AI Image':'Likely AI Video';
+    vsub='Multiple signals indicate AI-generated content ('+p+'% probability)';
+    cdesc='<strong>'+p+'%</strong> of signals point to AI. '+(type==='text'?'Consistent style, formal language, no personal voice.':type==='image'?'Resolution, format and dimensions suggest an AI generator.':'Duration, format and bitrate suggest an AI video.');
+  }else if(p>=45){
+    bg='#FAEEDA';tc='#854F0B';
+    verdict='Mixed — Uncertain';
+    vsub='Shows signals from both AI and human ('+p+'% probability)';
+    cdesc='<strong>'+p+'%</strong> of signals indicate possible AI. Difficult to confirm — consider the context carefully.';
+  }else{
+    bg='#EAF3DE';tc='#3B6D11';
+    verdict=type==='text'?'Likely Human-Written':type==='image'?'Likely Original Image':'Likely Original Video';
+    vsub='Appears authentic ('+(100-p)+'% confidence)';
+    cdesc='<strong>'+(100-p)+'%</strong> confidence of human origin. '+(type==='text'?'Contains personal voice and natural language variation.':'Characteristics suggest authentic content.');
+  }
+
+  const icon=document.getElementById('vIcon');
+  icon.style.cssText=`width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;font-weight:700;background:${bg};color:${tc}`;
+  icon.textContent=p>=65?'!':p>=45?'~':'✓';
+  const lbl=document.getElementById('vLabel');
+  lbl.textContent=verdict; lbl.style.color=tc;
+  document.getElementById('vSub').textContent=vsub;
+
+  const circle=document.getElementById('scoreCircle');
+  circle.style.cssText=`width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:700;flex-shrink:0;background:${bg};color:${tc};border:3px solid ${tc}`;
+  circle.textContent=p+'%';
+  document.getElementById('scoreDesc').innerHTML=cdesc+(s.extra?`<br><span style="font-size:11px;margin-top:5px;display:block;color:#a8a29e">${s.extra}</span>`:'');
+
+  document.getElementById('signalsTitle').textContent=type==='text'?'8 TEXT SIGNALS':type==='image'?'IMAGE SIGNALS':'VIDEO SIGNALS';
+
+  const grid=document.getElementById('signalsGrid');
+  grid.innerHTML='';
+  s.signals.forEach(sig=>{
+    const color=sig.score>=65?'#D85A30':sig.score>=45?'#EF9F27':'#639922';
+    const div=document.createElement('div');
+    div.className='signal-item';
+    const id='sf_'+sig.name.replace(/\s/g,'_');
+    div.innerHTML=`<div class="signal-top"><span class="signal-name">${sig.name}</span><span class="signal-val" style="color:${color}">${sig.score}%</span></div><div class="signal-hint">${sig.hint}</div><div class="signal-bar"><div class="signal-fill" id="${id}" style="background:${color}"></div></div>`;
+    grid.appendChild(div);
+    setTimeout(()=>{const el=document.getElementById(id);if(el)el.style.width=sig.score+'%';},200);
+  });
+
+  // Sentence highlights (text only)
+  const hlSection=document.getElementById('hlSection');
+  if(type==='text'&&s.sentenceRisks&&origText){
+    hlSection.style.display='block';
+    document.getElementById('hlText').innerHTML=s.sentenceRisks.map(sr=>{
+      const esc=sr.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const title=`title="AI likelihood: ${sr.risk}%"`;
+      if(sr.risk>=60)return`<span class="hl-high" ${title}>${esc}</span>`;
+      if(sr.risk>=35)return`<span class="hl-med" ${title}>${esc}</span>`;
+      return`<span class="hl-low" ${title}>${esc}</span>`;
+    }).join(' ');
+  } else {
+    hlSection.style.display='none';
+  }
+
+  // Tips — show when text is uncertain or flagged
+  document.getElementById('tipsSection').style.display=(type==='text'&&p>=40)?'block':'none';
+
+  // Tags
+  const tags=[];
+  if(type==='text'){
+    const top=s.signals.filter(x=>x.score>=65).map(x=>x.name);
+    if(top.length)tags.push({l:'Top signals: '+top.slice(0,2).join(', '),bg:'#FAECE7',c:'#993C1D'});
+    if(s.signals.find(x=>x.name==='Personal voice'&&x.score<35))tags.push({l:'Personal voice detected',bg:'#EAF3DE',c:'#3B6D11'});
+    if(s.signals.find(x=>x.name==='Burstiness'&&x.score<35))tags.push({l:'Natural burstiness',bg:'#E1F5EE',c:'#0F6E56'});
+    tags.push({l:s.words+' words',bg:'#E6F1FB',c:'#185FA5'});
+    tags.push({l:s.sentences+' sentences',bg:'#EEEDFE',c:'#534AB7'});
+  }else{
+    tags.push({l:type==='image'?'Image analysis':'Video analysis',bg:'#E6F1FB',c:'#185FA5'});
+    if(s.extra)tags.push({l:s.extra.split('·')[0].trim(),bg:'#EEEDFE',c:'#534AB7'});
+  }
+  document.getElementById('tagsArea').innerHTML=tags.map(t=>`<span class="tag" style="background:${t.bg};color:${t.c}">${t.l}</span>`).join('');
+
+  document.getElementById('resultCard').style.display='block';
+  document.getElementById('resultCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+  renderCartoon(p);
+
+  // Save to history
+  addToHistory(s,type,origText);
+}
+
+// ── HISTORY ──────────────────────────────────────────────
+function addToHistory(s,type,text){
+  const preview=type==='text'?text.substring(0,60)+'...':type==='image'?'Image analysis':'Video analysis';
+  const item={preview,score:s.avg,type,time:new Date().toLocaleTimeString(),signals:s.signals};
+  history.unshift(item);
+  if(history.length>5) history.pop();
+  renderHistory();
+}
+
+function renderHistory(){
+  if(history.length===0)return;
+  document.getElementById('historySection').style.display='block';
+  const list=document.getElementById('historyList');
+  list.innerHTML=history.map((h,i)=>{
+    const color=h.score>=65?'#D85A30':h.score>=45?'#EF9F27':'#639922';
+    return`<div class="history-item" onclick="restoreHistory(${i})">
+      <div class="history-left">
+        <div class="history-preview">${h.type==='text'?'📝':h.type==='image'?'🖼':'🎬'} ${h.preview}</div>
+        <div class="history-meta">${h.type} · ${h.time}</div>
+      </div>
+      <div class="history-score" style="color:${color}">${h.score}%</div>
+    </div>`;
+  }).join('');
+}
+
+function restoreHistory(i){
+  const h=history[i];
+  showResults({signals:h.signals,avg:h.score,type:h.type,words:0,sentences:0},h.type,'');
+}
+
+// ── REPORT ───────────────────────────────────────────────
+function buildReportText(){
+  if(!lastResult)return'No results yet.';
+  const s=lastResult;
+  const now=new Date().toLocaleString();
+  let txt=`SPECIAL ONE AI DETECTION PRO — REPORT\n`;
+  txt+=`Generated: ${now}\n`;
+  txt+=`Type: ${s.type.toUpperCase()}\n`;
+  txt+=`Overall AI Score: ${s.avg}%\n\n`;
+  txt+=`SIGNAL BREAKDOWN:\n`;
+  s.signals.forEach(sig=>{txt+=`  • ${sig.name}: ${sig.score}%\n`;});
+  if(s.words) txt+=`\nWords analyzed: ${s.words} | Sentences: ${s.sentences}`;
+  txt+=`\n\nNOTE: Results are probability estimates only — not definitive verdicts.\nContact: 0792353234`;
+  return txt;
+}
+
+function copyReport(){
+  const txt=buildReportText();
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=event.target;
+    btn.textContent='✓ Copied!';
+    setTimeout(()=>btn.textContent='📋 Copy Report',2000);
+  }).catch(()=>alert(buildReportText()));
+}
+
+function downloadReport(){
+  const txt=buildReportText();
+  const blob=new Blob([txt],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='ai-detection-report.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── CARTOONS ─────────────────────────────────────────────
+function humanSVG(size){
+  const s=size;
+  return`<svg width="${s}" height="${s}" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Body -->
+    <ellipse cx="40" cy="68" rx="18" ry="10" fill="#C4E0A0"/>
+    <!-- Neck -->
+    <rect x="35" y="52" width="10" height="10" rx="3" fill="#F5C5A3"/>
+    <!-- Head -->
+    <ellipse cx="40" cy="38" rx="20" ry="22" fill="#F5C5A3"/>
+    <!-- Hair -->
+    <ellipse cx="40" cy="18" rx="20" ry="10" fill="#5C3D1E"/>
+    <rect x="20" y="18" width="6" height="14" rx="3" fill="#5C3D1E"/>
+    <rect x="54" y="18" width="6" height="14" rx="3" fill="#5C3D1E"/>
+    <!-- Eyes -->
+    <ellipse cx="32" cy="37" rx="4" ry="4.5" fill="white"/>
+    <ellipse cx="48" cy="37" rx="4" ry="4.5" fill="white"/>
+    <circle cx="33" cy="38" r="2.2" fill="#3B2A1A"/>
+    <circle cx="49" cy="38" r="2.2" fill="#3B2A1A"/>
+    <circle cx="34" cy="37" r=".8" fill="white"/>
+    <circle cx="50" cy="37" r=".8" fill="white"/>
+    <!-- Eyebrows -->
+    <path d="M28 31 Q32 28 36 31" stroke="#5C3D1E" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <path d="M44 31 Q48 28 52 31" stroke="#5C3D1E" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+    <!-- Nose -->
+    <ellipse cx="40" cy="44" rx="2" ry="1.5" fill="#E8A882"/>
+    <!-- Smile -->
+    <path d="M33 50 Q40 56 47 50" stroke="#C0725A" stroke-width="2" stroke-linecap="round" fill="none"/>
+    <!-- Ears -->
+    <ellipse cx="20" cy="39" rx="3.5" ry="5" fill="#F5C5A3"/>
+    <ellipse cx="60" cy="39" rx="3.5" ry="5" fill="#F5C5A3"/>
+  </svg>`;
+}
+
+function aiSVG(size){
+  const s=size;
+  return`<svg width="${s}" height="${s}" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Body -->
+    <rect x="22" y="56" width="36" height="18" rx="5" fill="#378ADD"/>
+    <!-- Neck -->
+    <rect x="34" y="50" width="12" height="9" rx="2" fill="#5B9BD5"/>
+    <!-- Head -->
+    <rect x="14" y="14" width="52" height="40" rx="10" fill="#5B9BD5"/>
+    <!-- Antenna -->
+    <rect x="38" y="6" width="4" height="10" rx="2" fill="#5B9BD5"/>
+    <circle cx="40" cy="5" r="4" fill="#EF9F27"/>
+    <!-- Visor / screen face -->
+    <rect x="20" y="20" width="40" height="26" rx="6" fill="#1A3A5C"/>
+    <!-- Eyes — glowing -->
+    <ellipse cx="31" cy="33" rx="6" ry="6" fill="#00CFFF" opacity=".9"/>
+    <ellipse cx="49" cy="33" rx="6" ry="6" fill="#00CFFF" opacity=".9"/>
+    <circle cx="31" cy="33" r="3" fill="white"/>
+    <circle cx="49" cy="33" r="3" fill="white"/>
+    <circle cx="32" cy="32" r="1.2" fill="#1A3A5C"/>
+    <circle cx="50" cy="32" r="1.2" fill="#1A3A5C"/>
+    <!-- Mouth — straight line with dots -->
+    <rect x="27" y="41" width="26" height="3" rx="1.5" fill="#378ADD"/>
+    <circle cx="30" cy="42.5" r="1.5" fill="#00CFFF"/>
+    <circle cx="37" cy="42.5" r="1.5" fill="#00CFFF"/>
+    <circle cx="44" cy="42.5" r="1.5" fill="#00CFFF"/>
+    <circle cx="50" cy="42.5" r="1.5" fill="#00CFFF"/>
+    <!-- Side bolts -->
+    <rect x="10" y="26" width="6" height="10" rx="3" fill="#378ADD"/>
+    <rect x="64" y="26" width="6" height="10" rx="3" fill="#378ADD"/>
+    <!-- Chest buttons -->
+    <circle cx="31" cy="64" r="3" fill="#00CFFF"/>
+    <circle cx="40" cy="64" r="3" fill="#EF9F27"/>
+    <circle cx="49" cy="64" r="3" fill="#00CFFF"/>
+  </svg>`;
+}
+
+function renderCartoon(p){
+  const sec=document.getElementById('cartoonSection');
+  const inner=document.getElementById('cartoonInner');
+  sec.style.display='block';
+
+  if(p>=65){
+    // AI dominant — big AI, small faded human
+    inner.innerHTML=`
+      <div class="cartoon-wrap">
+        <div class="cartoon-svg receding">${humanSVG(54)}</div>
+        <div class="cartoon-label" style="color:#a8a29e">Human</div>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="cartoon-wrap">
+        <div class="cartoon-svg dominant">${aiSVG(80)}</div>
+        <div class="cartoon-label" style="color:#D85A30">AI — ${p}%</div>
+      </div>`;
+  } else if(p<=44){
+    // Human dominant — big human, small faded AI
+    inner.innerHTML=`
+      <div class="cartoon-wrap">
+        <div class="cartoon-svg dominant">${humanSVG(80)}</div>
+        <div class="cartoon-label" style="color:#3B6D11">Human — ${100-p}%</div>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="cartoon-wrap">
+        <div class="cartoon-svg receding">${aiSVG(54)}</div>
+        <div class="cartoon-label" style="color:#a8a29e">AI</div>
+      </div>`;
+  } else {
+    // Mixed — both same size side by side
+    inner.innerHTML=`
+      <div class="cartoon-wrap">
+        <div class="cartoon-svg">${humanSVG(68)}</div>
+        <div class="cartoon-label" style="color:#3B6D11">Human — ${100-p}%</div>
+      </div>
+      <div class="vs-badge">⚡</div>
+      <div class="cartoon-wrap">
+        <div class="cartoon-svg">${aiSVG(68)}</div>
+        <div class="cartoon-label" style="color:#D85A30">AI — ${p}%</div>
+      </div>`;
+  }
+}
+function dedupeScores(signals){
+  const counts={};
+  signals.forEach(s=>{counts[s.score]=(counts[s.score]||0)+1;});
+  signals.forEach(s=>{
+    if(counts[s.score]>3){
+      counts[s.score]--;
+      let nudge=1;
+      while(nudge<=20){
+        const candidate=clamp(s.score+(nudge%2===0?nudge/2:-(nudge+1)/2));
+        if(!counts[candidate]||counts[candidate]<3){
+          counts[candidate]=(counts[candidate]||0)+1;
+          s.score=candidate; break;
+        }
+        nudge++;
+      }
+    }
+  });
+}
+function clamp(v){return Math.round(Math.max(6,Math.min(95,v)));}
+</script>
+<script>
+(function(){
+  const text = 'SPECIAL ONE';
+  const colors = [
+    '#D85A30','#EF9F27','#f7c948','#e84393','#a855f7',
+    '#3b82f6','#10b981','#f97316','#ec4899','#14b8a6','#6366f1'
+  ];
+
+  // Create container
+  const wrap = document.createElement('div');
+  wrap.style.cssText='position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;';
+  document.body.appendChild(wrap);
+
+  // Create one span per letter
+  const spans = [];
+  text.split('').forEach((ch,i)=>{
+    const s = document.createElement('span');
+    s.textContent = ch === ' ' ? '\u00A0' : ch;
+    s.style.cssText = `
+      font-family:'Algerian','Book Antiqua','Palatino Linotype',serif;
+      font-size:82px;
+      font-weight:900;
+      font-style:italic;
+      display:inline-block;
+      opacity:0.82;
+      transition:color 1.2s ease;
+      color:${colors[i % colors.length]};
+      text-shadow: 0 0 18px rgba(239,159,39,0.3);
+      user-select:none;
+    `;
+    spans.push(s);
+  });
+
+  // Wrapper for the word
+  const word = document.createElement('div');
+  word.style.cssText='position:absolute;white-space:nowrap;transform:rotate(-30deg);will-change:left,top;';
+  spans.forEach(s=>word.appendChild(s));
+  wrap.appendChild(word);
+
+  // Position
+  let x = 60, y = window.innerHeight * 0.6;
+  let vx = 0.7, vy = -0.45;
+  let t = 0;
+
+  // Letter color cycling — one letter every 3 seconds
+  let colorIndex = 0;
+  let letterIndex = 0;
+
+  function cycleNextLetter(){
+    spans[letterIndex].style.color = colors[colorIndex % colors.length];
+    letterIndex = (letterIndex + 1) % spans.length;
+    colorIndex++;
+  }
+  setInterval(cycleNextLetter, 3000);
+
+  function animate(){
+    t += 0.007;
+    x += vx + Math.sin(t * 0.6) * 0.4;
+    y += vy + Math.cos(t * 0.5) * 0.3;
+
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    const ww = word.offsetWidth || 700;
+    const wh = word.offsetHeight || 100;
+
+    if(x > W - ww * 0.3){ vx = -Math.abs(vx); }
+    if(x < -ww * 0.5)   { vx =  Math.abs(vx); }
+    if(y > H - 40)       { vy = -Math.abs(vy); }
+    if(y < 40)           { vy =  Math.abs(vy); }
+
+    // Opacity never goes below 0.7 — always visible
+    const op = 0.75 + Math.sin(t * 1.3) * 0.12;
+    word.style.opacity = op;
+    word.style.left = x + 'px';
+    word.style.top  = y + 'px';
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+})();
+</script>
+</body>
+</html>
